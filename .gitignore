@@ -1,0 +1,9 @@
+.deployment
+.env
+.vscode
+**/__pycache__/
+*.pyc
+*.pyo
+/venv
+*.log
+logs/

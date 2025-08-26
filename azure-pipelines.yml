@@ -1,0 +1,71 @@
+trigger:
+  branches:
+    include:
+      - dev
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+
+  # Install ODBC dev headers for pyodbc to compile successfully
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y unixodbc-dev
+    displayName: 'Install ODBC development libraries'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: 'Install dependencies'
+
+  #- script: |
+  # echo "Run tests here (optional)"
+   # pytest --maxfail=1 --disable-warnings -q || true
+    #displayName: 'Run tests (optional)'
+
+  # Start Flask app (usually for testing, not for prod deployment)
+  - script: |
+      echo "Starting Flask app..."
+      python app.py
+    displayName: 'Run Flask App'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.SourcesDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+      verbose: true
+    displayName: 'Archive application files'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
+      publishLocation: 'Container'
+    displayName: 'Publish artifact'
+
+  # Set the startup command to run.py using gunicorn
+  - task: AzureAppServiceSettings@1
+    inputs:
+      azureSubscription: 'dev-tdi-uae-resource-connection'
+      appName: 'dev-tcgai-loginmodule'
+      appSettings: |
+        -WEBSITES_PORT=8000
+        -STARTUP_COMMAND=gunicorn app:app
+    displayName: 'Configure startup command'
+
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: 'dev-tdi-uae-resource-connection'
+      appType: 'webAppLinux'
+      appName: 'dev-tcgai-loginmodule'
+      package: '$(Build.ArtifactStagingDirectory)/app.zip'
+    displayName: 'Deploy to Azure Web App'
+
+
+    
