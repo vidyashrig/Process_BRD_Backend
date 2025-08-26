@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy.dialects import mssql
 from sqlalchemy import Numeric
+from utils import get_local_now
 
 db = SQLAlchemy()
 
@@ -31,11 +32,13 @@ class ProcessDetails(db.Model):
     RequiredTimeMins = db.Column(Numeric(10, 2), nullable=True)
     RemarksForTransaction = db.Column(mssql.NVARCHAR(None), nullable=True)  # NVARCHAR(MAX)
     AccessCode = db.Column(mssql.NVARCHAR(100), nullable=False)  # NVARCHAR(100)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
-    UpdatedAt = db.Column(db.DateTime, default=datetime.utcnow)
-
+    CreatedAt = db.Column(db.DateTime, default=get_local_now, nullable=False)
+    UpdatedAt = db.Column(db.DateTime, default=get_local_now, onupdate=get_local_now, nullable=False)
+    
     def __repr__(self):
         return (
             f"<ProcessDetails(Id={self.Id}, "
             f"ProcessCode='{self.ProcessCode}', ProcessName='{self.ProcessName}')>"
         )
+    
+

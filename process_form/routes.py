@@ -102,16 +102,14 @@ def submit_process_details():
     # Update process-level info for all rows
     for row in process_rows:
         row.TransactionsCount = no_of_transactions
-        row.RemarksForTransaction = remarks
-        row.UpdatedAt = datetime.utcnow()
+        row.RemarksForTransaction = remarks        
 
     # Update task-level info
     for t in tasks:
         task_record = ProcessDetails.query.filter_by(ProcessName=process_name, Activity=t["Activity"]).first()
         if task_record:
             task_record.RequiredTimeMins = t["RequiredTimeMins"]
-            task_record.ResponsibleEmpNo = t["ResponsibleEmpNo"]
-            task_record.UpdatedAt = datetime.utcnow()
+            task_record.ResponsibleEmpNo = t["ResponsibleEmpNo"]            
 
     db.session.commit()
     return jsonify({"message": "Details for the current process submitted successfully"}), 200
